@@ -1,6 +1,16 @@
-upDocker:
-	docker compose up
-migrate_create:
-	migrate create -ext sql -dir db/migration/ init
-migrate_up:
-	migrate -path db/migration/ -database "postgresql://user:secret@localhost:5430/postgres_db?sslmode=disable" -verbose up
+PROTO_DIR = proto
+OUT_DIR = .
+
+gen_order:
+	protoc --proto_path=$(PROTO_DIR) \
+	  --go_out=$(OUT_DIR) \
+	  --go-grpc_out=$(OUT_DIR) \
+	  $(PROTO_DIR)/order.proto
+gen_user:
+	protoc --proto_path=$(PROTO_DIR) \
+	  --go_out=$(OUT_DIR) \
+	  --go-grpc_out=$(OUT_DIR) \
+	  $(PROTO_DIR)/user.proto
+gen_all:
+	make gen_order
+	make gen_user
