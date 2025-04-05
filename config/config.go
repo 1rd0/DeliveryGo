@@ -2,42 +2,61 @@ package config
 
 import (
 	"fmt"
-	"github.com/caarlos0/env/v11"
+
+	"gopkg.in/yaml.v3"
+	"os"
 )
 
-type Config struct { // структура конфио котоырй содержит в себе данные с env  чтобы использовать в проекте
-	DatabaseName     string `env:"DB_NAME"`
-	DatabaseHost     string `env:"DB_HOST"`
-	DatabasePort     string `env:"DB_PORT"`
-	ApiServerPort    string `env:"API_SERVER_PORT"`
-	ApiServerHost    string `env:"API_SERVER_HOST"`
-	DatabasePortTest string `env:"DB_PORT_TEST"`
-	DatabaseUser     string `env:"DB_USER"`
-	DatabasePass     string `env:"DB_PASSWORD"`
-	Environment      Env    `env:"ENV" envDefault:"dev"`
-	ProjectRoot      string `env:"PROJECT_ROOT"`
-	JwtSecret        string `env:"JWT_SECRET"`
+type Config struct {
+	Host     string `yaml:"POSTGRES_HOST" env:"POSTGRES_HOST" env-default:"localhost"`
+	Port     uint16 `yaml:"POSTGRES_PORT" env:"POSTGRES_PORT" env-default:"5432"`
+	User     string `yaml:"POSTGRES_USER" env:"POSTGRES_USER" env-default:"user" `
+	Pass     string `yaml:"POSTGRES_PASS" env:"POSTGRES_PASS" env-default:"secret"`
+	Database string `yaml:"POSTGRES_DB" env:"POSTGRES_DB" env-default:"postgres_db"`
+	MinCons  int32  `yaml:"POSTGRES_MIN_CON" env:"POSTGRES_MIN_CON" env-default:"5"`
+	MaxCons  int32  `yaml:"POSTGRES_MAX_CON" env:"POSTGRES_MAX_CON" env-default:"10"`
 }
 
-func New() (*Config, error) {
-	cfg, err := env.ParseAs[Config]()
+// подгружаем данные ямла
+func loadFromYAML(cfg *Config) error {
+	data, err := os.ReadFile("config/config.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("parse config: %w", err)
+		return fmt.Errorf("failed to read yaml file: %w", err)
 	}
-	return &cfg, nil
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return fmt.Errorf("failed to unmarshal yaml: %w", err)
+	}
+	return nil
+}
+func New() (*Config, error) {
+	cfg := &Config{}
+	if err := loadFromYAML(cfg); err != nil {
+		fmt.Println("No YAML config loaded, falling back to defaults and env vars...")
+	}
+	return cfg, nil
 }
 
-type Env string
+func (c *Config) Allinfo() {
+	fmt.Printf("Host: %s\n", c.Host)
+	fmt.Printf("Port: %d\n", c.Port)
+	fmt.Printf("User: %s\n", c.User)
+	fmt.Printf("Pass: %s\n", c.Pass)
+	fmt.Printf("Database: %s\n", c.Database)
+	fmt.Printf("MinCons: %d\n", c.MinCons)
+	fmt.Printf("MaxCons: %d\n", c.MaxCons)
+}
 
-const (
-	EnvDev  Env = "dev"
-	EnvTest Env = "test"
-)
-
+// строка подлкючения пула конекшеннов
 func (c *Config) DatabaseURL() string {
-	port := c.DatabasePort
-	if c.Environment == EnvTest {
-		port = c.DatabasePortTest
-	}
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", c.DatabaseUser, c.DatabasePass, c.DatabaseHost, port, c.DatabaseName)
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?pool_max_conns=%d&pool_min_conns=%d",
+		c.User,
+		c.Pass,
+		c.Host,
+		c.Port,
+		c.Database,
+		c.MaxCons,
+		c.MinCons,
+	)
+	return connStr
 }
