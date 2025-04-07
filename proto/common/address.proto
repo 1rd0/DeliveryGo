@@ -1,0 +1,9 @@
+syntax = "proto3";
+option go_package = "pkg/api/common";
+package common;
+
+message Address {
+  string country = 1;
+  string city = 2;
+  string street = 3;
+}

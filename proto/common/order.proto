@@ -1,0 +1,14 @@
+syntax = "proto3";
+option go_package = "pkg/api/common";
+package common;
+
+import "common/address.proto";
+
+message Order {
+  int32 id = 1;
+  Address origin = 2;
+  Address destination = 3;
+  string description = 4;
+  int32 price = 5;
+  string status = 6;
+}

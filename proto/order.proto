@@ -4,59 +4,62 @@ option go_package = "pkg/api/order";
 
 package order;
 
+import "common/address.proto";
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
-  rpc ListOrder(ListOrdersRequest) returns (ListOrdersResponse);
-  rpc DeleteOrder(ListOrdersRequest) returns (ListOrdersResponse);
-  rpc UpdateOrder(UpdateOrderRequest) returns (UpdateOrdersResponse);
+  rpc GetStatusOrder(GetStatusOrderRequest) returns (GetStatusOrderResponse);
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc DeleteOrder(DeleteOrderRequest) returns (DeleteOrderResponse);
+  rpc UpdateOrder(UpdateOrderRequest) returns (UpdateOrderResponse);
 }
 
 message Order {
   int32 id = 1;
-  Address origin = 2;
-  Address destination = 3;
+  common.Address origin = 2;
+  common.Address destination = 3;
   string description = 4;
   int32 price = 5;
   string status = 6;
 }
 
-message Address {
-  string country = 1;
-  string city = 2;
-  string street = 3;
-}
-
-
 message CreateOrderRequest {
   Order order = 1;
   int32 quantity = 2;
 }
+
 message CreateOrderResponse {
   int32 id = 1;
 }
 
-
 message GetOrderRequest {
   int32 id = 1;
 }
+
 message GetOrderResponse {
   Order order = 1;
 }
 
+message GetStatusOrderRequest {
+  int32 id = 1;
+}
 
-message ListOrdersRequest {
+message GetStatusOrderResponse {
   string status = 1;
 }
+
+message ListOrdersRequest {}
+
 message ListOrdersResponse {
   repeated Order orders = 1;
 }
 
-
 message DeleteOrderRequest {
   int32 id = 1;
 }
-message DeleteOrdersResponse {
+
+message DeleteOrderResponse {
   bool success = 1;
 }
 
@@ -64,7 +67,7 @@ message UpdateOrderRequest {
   int32 id = 1;
   Order order = 2;
 }
-message UpdateOrdersResponse {
+
+message UpdateOrderResponse {
   bool success = 1;
 }
-
